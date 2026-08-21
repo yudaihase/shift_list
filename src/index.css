@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-salon-beige-50 text-salon-ink-800 antialiased;
+    font-feature-settings: "palt";
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-salon-mint-500 text-white font-medium rounded-xl px-5 py-3 transition-all
+           active:scale-95 hover:bg-salon-mint-600 shadow-sm;
+  }
+  .btn-secondary {
+    @apply bg-white text-salon-mint-600 font-medium rounded-xl px-5 py-3 border border-salon-mint-200
+           transition-all active:scale-95 hover:bg-salon-mint-50;
+  }
+  .btn-danger {
+    @apply bg-red-50 text-red-600 font-medium rounded-xl px-5 py-3 border border-red-200
+           transition-all active:scale-95 hover:bg-red-100;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-salon-beige-100;
+  }
+  .input-field {
+    @apply w-full rounded-xl border border-salon-beige-200 bg-salon-beige-50 px-4 py-3
+           text-salon-ink-800 placeholder-salon-beige-400
+           focus:border-salon-mint-400 focus:bg-white focus:outline-none transition-colors;
+  }
+  .label-text {
+    @apply text-sm font-medium text-salon-ink-700;
+  }
+}
