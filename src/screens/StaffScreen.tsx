@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, ShiftRequest, ShiftAssignment, WEEKDAYS, getWeekStart, getWeekDates, formatDate, formatDateLabel, formatWeekLabel, TIME_SLOTS } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Calendar, Send, Check, Clock, LogOut, ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
+import { Calendar, Send, Check, Clock, LogOut, ChevronLeft, ChevronRight, X, Loader2, RotateCcw } from 'lucide-react';
 
 type DayRequest = {
   is_off: boolean;
@@ -11,7 +11,7 @@ type DayRequest = {
 };
 
 const DEFAULT_START_TIME = '12:00';
-const DEFAULT_END_TIME = '18:00';
+const DEFAULT_END_TIME = '00:00';
 
 const EMPTY_DAY: DayRequest = {
   is_off: false,
@@ -60,7 +60,6 @@ export default function StaffScreen() {
       (reqData || []).forEach((r: ShiftRequest) => {
         map[r.request_date] = {
           is_off: r.is_off,
-          // 先頭5文字切り出し＆TIME_SLOTSに含まれるか確認して状態に保持
           start_time: formatTimeSlot(r.start_time, DEFAULT_START_TIME),
           end_time: formatTimeSlot(r.end_time, DEFAULT_END_TIME),
           note: r.note || '',
@@ -91,10 +90,10 @@ export default function StaffScreen() {
   }, [profile, weekStart]);
 
   const shiftWeek = (delta: number) => {
-  const d = new Date(weekStart + 'T00:00:00');
-  d.setDate(d.getDate() + delta * 7);
-  setWeekStart(getWeekStart(d));
-};
+    const d = new Date(weekStart + 'T00:00:00');
+    d.setDate(d.getDate() + delta * 7);
+    setWeekStart(getWeekStart(d));
+  };
 
   const updateDay = (date: string, patch: Partial<DayRequest>) => {
     setRequests((prev) => ({
@@ -102,6 +101,18 @@ export default function StaffScreen() {
       [date]: { ...(prev[date] || EMPTY_DAY), ...patch },
     }));
     setSaved(false);
+  };
+
+  // 💡 一括リセット処理
+  const handleReset = () => {
+    if (confirm('現在の入力内容を初期状態にリセットしますか？')) {
+      const resetMap: Record<string, DayRequest> = {};
+      weekDates.forEach((d) => {
+        resetMap[formatDate(d)] = { ...EMPTY_DAY };
+      });
+      setRequests(resetMap);
+      setSaved(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -167,7 +178,7 @@ export default function StaffScreen() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-4">
-        {/* Week navigation */}
+        {/* Week navigation & Reset button */}
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => shiftWeek(-1)} className="p-2 rounded-lg hover:bg-salon-beige-100 transition-colors">
             <ChevronLeft className="w-5 h-5 text-salon-ink-700" />
@@ -187,6 +198,17 @@ export default function StaffScreen() {
           </div>
         ) : view === 'request' ? (
           <>
+            {/* 💡 一括リセットボタン */}
+            <div className="flex justify-end mb-3">
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-1 text-xs font-medium text-salon-beige-500 hover:text-red-500 bg-salon-beige-50 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-salon-beige-100"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                入力をリセット
+              </button>
+            </div>
+
             <div className="space-y-3">
               {weekDates.map((date, i) => {
                 const dateStr = formatDate(date);
