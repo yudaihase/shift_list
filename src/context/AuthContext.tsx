@@ -17,14 +17,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 初回セッション取得
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (!data.session) setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    // 認証状態の変更をリアルタイム監視
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
-      if (!newSession) {
+
+      // ログアウト時またはセッション消失時
+      if (event === 'SIGNED_OUT' || !newSession) {
         setProfile(null);
         setLoading(false);
       }
@@ -36,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session) {
       setProfile(null);
+      setLoading(false);
       return;
     }
     let cancelled = false;
@@ -45,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select('*')
         .eq('id', session.user.id)
         .maybeSingle();
+
       if (!cancelled) {
         if (data) setProfile(data as Profile);
         setLoading(false);
@@ -55,8 +61,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error('SignOut error:', e);
+    } finally {
+      // 明示的にStateをクリアしてログアウト状態を即時反映する
+      setSession(null);
+      setProfile(null);
+      setLoading(false);
+    }
   };
 
   return (

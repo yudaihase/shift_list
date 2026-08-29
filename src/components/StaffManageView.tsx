@@ -6,6 +6,7 @@ import {
   updateStaffPassword,
   deleteStaff,
   createStaff,
+  usernameToEmail,
   StaffMember,
 } from '@/lib/ownerApi';
 import { StaffEvaluationView } from './StaffEvaluationView';
@@ -23,8 +24,11 @@ import {
 type StaffSubTab = 'list' | 'hours' | 'evaluation';
 
 // 部屋と駐車場のマスター定義
-const ROOM_OPTIONS = ['101', '401', '601', '602'];
-const PARKING_OPTIONS = ['5', '15', '石田'];
+const ROOM_OPTIONS = ['101', '401', '601', '602'] as const;
+const PARKING_OPTIONS = ['5', '15', '石田'] as const;
+
+type RoomOption = (typeof ROOM_OPTIONS)[number];
+type ParkingOption = (typeof PARKING_OPTIONS)[number];
 
 export function StaffManageView() {
   const [staff, setStaff] = useState<(StaffMember & { fixed_room?: string | null; fixed_parking?: string | null })[]>([]);
@@ -204,117 +208,122 @@ export function StaffManageView() {
             </div>
           ) : (
             <div className="space-y-3">
-              {staff.map((s) => (
-                <div key={s.id} className="card p-4">
-                  {editingId === s.id ? (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="input-field"
-                        placeholder="名前"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={async () => {
-                            await updateStaffName(s.id, editName);
-                            setEditingId(null);
-                            load();
-                          }}
-                          className="btn-primary flex-1 py-2 text-sm"
-                        >
-                          保存
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="btn-secondary py-2 px-4 text-sm"
-                        >
-                          キャンセル
-                        </button>
+              {staff.map((s) => {
+                // 表示用ユーザーID（@internal.local部分を除去）
+                const displayUsername = s.email?.split('@')[0] || s.email;
+
+                return (
+                  <div key={s.id} className="card p-4">
+                    {editingId === s.id ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="input-field"
+                          placeholder="名前"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              await updateStaffName(s.id, editName);
+                              setEditingId(null);
+                              load();
+                            }}
+                            className="btn-primary flex-1 py-2 text-sm"
+                          >
+                            保存
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="btn-secondary py-2 px-4 text-sm"
+                          >
+                            キャンセル
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <p className="text-sm font-medium text-salon-ink-800">{s.name}</p>
-                          <p className="text-xs text-salon-beige-400">{s.email}</p>
-                          
-                          {/* 固定設定の表示ラベル */}
-                          {s.role !== 'owner' && (s.fixed_room || s.fixed_parking) && (
-                            <div className="flex gap-1.5 mt-1.5">
-                              {s.fixed_room && (
-                                <span className="text-[10px] bg-salon-beige-100 text-salon-ink-700 px-2 py-0.5 rounded-full">
-                                  固定部屋: {s.fixed_room}
-                                </span>
-                              )}
-                              {s.fixed_parking && (
-                                <span className="text-[10px] bg-salon-beige-100 text-salon-ink-700 px-2 py-0.5 rounded-full">
-                                  固定駐車場: {s.fixed_parking}
-                                </span>
-                              )}
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <p className="text-sm font-medium text-salon-ink-800">{s.name}</p>
+                            <p className="text-xs text-salon-beige-400">ID: {displayUsername}</p>
+                            
+                            {/* 固定設定の表示ラベル */}
+                            {s.role !== 'owner' && (s.fixed_room || s.fixed_parking) && (
+                              <div className="flex gap-1.5 mt-1.5">
+                                {s.fixed_room && (
+                                  <span className="text-[10px] bg-salon-beige-100 text-salon-ink-700 px-2 py-0.5 rounded-full">
+                                    固定部屋: {s.fixed_room}
+                                  </span>
+                                )}
+                                {s.fixed_parking && (
+                                  <span className="text-[10px] bg-salon-beige-100 text-salon-ink-700 px-2 py-0.5 rounded-full">
+                                    固定駐車場: {s.fixed_parking}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {s.role === 'owner' && (
+                              <span className="inline-block text-xs text-salon-mint-600 bg-salon-mint-50 px-2 py-0.5 rounded mt-1">
+                                オーナー
+                              </span>
+                            )}
+                          </div>
+                          {s.role !== 'owner' && (
+                            <div className="flex gap-1">
+                              {/* 固定設定ボタン */}
+                              <button
+                                onClick={() => setSettingStaffId(s.id)}
+                                title="固定部屋・駐車場設定"
+                                className="p-2 text-salon-ink-700 hover:bg-salon-beige-100 rounded-lg transition-colors"
+                              >
+                                <Settings className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingId(s.id);
+                                  setEditName(s.name);
+                                }}
+                                className="p-2 text-salon-ink-700 hover:bg-salon-beige-100 rounded-lg transition-colors"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => setShowPasswordFor(s.id)}
+                                className="p-2 text-salon-ink-700 hover:bg-salon-beige-100 rounded-lg transition-colors"
+                              >
+                                <KeyRound className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`「${s.name}」を削除しますか？`)) {
+                                    await deleteStaff(s.id);
+                                    load();
+                                  }
+                                }}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           )}
-
-                          {s.role === 'owner' && (
-                            <span className="inline-block text-xs text-salon-mint-600 bg-salon-mint-50 px-2 py-0.5 rounded mt-1">
-                              オーナー
-                            </span>
-                          )}
                         </div>
-                        {s.role !== 'owner' && (
-                          <div className="flex gap-1">
-                            {/* 固定設定ボタン */}
-                            <button
-                              onClick={() => setSettingStaffId(s.id)}
-                              title="固定部屋・駐車場設定"
-                              className="p-2 text-salon-ink-700 hover:bg-salon-beige-100 rounded-lg transition-colors"
-                            >
-                              <Settings className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingId(s.id);
-                                setEditName(s.name);
-                              }}
-                              className="p-2 text-salon-ink-700 hover:bg-salon-beige-100 rounded-lg transition-colors"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setShowPasswordFor(s.id)}
-                              className="p-2 text-salon-ink-700 hover:bg-salon-beige-100 rounded-lg transition-colors"
-                            >
-                              <KeyRound className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (confirm(`「${s.name}」を削除しますか？`)) {
-                                  await deleteStaff(s.id);
-                                  load();
-                                }
-                              }}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                        {showPasswordFor === s.id && (
+                          <PasswordResetForm
+                            onSubmit={async (pw) => {
+                              await updateStaffPassword(s.id, pw);
+                              setShowPasswordFor(null);
+                            }}
+                            onCancel={() => setShowPasswordFor(null)}
+                          />
                         )}
-                      </div>
-                      {showPasswordFor === s.id && (
-                        <PasswordResetForm
-                          onSubmit={async (pw) => {
-                            await updateStaffPassword(s.id, pw);
-                            setShowPasswordFor(null);
-                          }}
-                          onCancel={() => setShowPasswordFor(null)}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              ))}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
               {staff.length === 0 && (
                 <div className="card p-8 text-center">
                   <Users className="w-10 h-10 text-salon-beige-300 mx-auto mb-3" />
@@ -580,14 +589,16 @@ function AddStaffModal({
   onError: (e: string) => void;
 }) {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState(''); // email から username に変更
   const [password, setPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name || !email || !password) return;
+    if (!name || !username || !password) return;
     setSaving(true);
     try {
+      // 入力されたユーザーIDをダミーメール形式（例: staff6@internal.local）に変換して登録
+      const email = usernameToEmail(username);
       await createStaff(email, password, name);
       onCreated();
     } catch (e) {
@@ -618,13 +629,13 @@ function AddStaffModal({
             />
           </div>
           <div>
-            <label className="label-text block mb-1">メールアドレス</label>
+            <label className="label-text block mb-1">ユーザーID</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="input-field"
-              placeholder="staff@example.com"
+              placeholder="例: staff6"
             />
           </div>
           <div>
@@ -644,7 +655,7 @@ function AddStaffModal({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={saving || !name || !email || password.length < 6}
+            disabled={saving || !name || !username || password.length < 6}
             className="btn-primary flex-1 py-2.5 text-sm flex items-center justify-center gap-1"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
