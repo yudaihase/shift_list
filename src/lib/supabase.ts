@@ -42,7 +42,26 @@ export type ShiftAssignment = {
   updated_at: string;
 };
 
-export const ROOMS = ['101', '102', '103', '104'] as const;
+// 💡 スタッフ評価用型定義
+export type StaffEvaluation = {
+  id?: string;
+  staff_id: string;
+  work_attitude: number;
+  nomination_score: number;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+// 💡 画面表示用の評価＋プロフィールの結合型
+export type EvaluationWithProfile = StaffEvaluation & {
+  staff_name: string;
+  email?: string;
+  average_score: number; // 算出用 (work_attitude + nomination_score) / 2
+  rank?: number;        // 順位
+};
+
+export const ROOMS = ['101', '401', '601', '602'] as const;
 export type Room = (typeof ROOMS)[number];
 
 // Salon week: Wednesday through next Tuesday

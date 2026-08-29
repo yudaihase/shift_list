@@ -34,10 +34,14 @@ export default function LoginScreen() {
     setSeedResult('');
     setError('');
 
+    // スタッフを5人に増やしました 💡
     const testUsers = [
       { email: 'owner@test.com', name: 'オーナー代表', role: 'owner' },
       { email: 'staff1@test.com', name: 'スタッフ1', role: 'staff' },
       { email: 'staff2@test.com', name: 'スタッフ2', role: 'staff' },
+      { email: 'staff3@test.com', name: 'スタッフ3', role: 'staff' },
+      { email: 'staff4@test.com', name: 'スタッフ4', role: 'staff' },
+      { email: 'staff5@test.com', name: 'スタッフ5', role: 'staff' },
     ];
 
     try {
@@ -63,7 +67,7 @@ export default function LoginScreen() {
         }
       }
 
-      setSeedResult('テストアカウントを作成しました！下のアカウントボタンを押してログインしてください。');
+      setSeedResult('テストアカウント（オーナー＋スタッフ5名）を作成しました！');
     } catch (e: any) {
       setError(`セットアップ失敗: ${e.message || String(e)}`);
     } finally {
@@ -78,7 +82,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-b from-salon-beige-50 to-salon-mint-50">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-b from-salon-beige-50 to-salon-mint-50 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-salon-mint-100 mb-4">
@@ -160,7 +164,7 @@ export default function LoginScreen() {
               className="w-full flex items-center justify-center gap-2 text-sm text-salon-mint-600 bg-salon-mint-50 rounded-xl py-2.5 transition-all active:scale-95 hover:bg-salon-mint-100"
             >
               {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              テストデータを初期化
+              テストデータを初期化（5人分作成）
             </button>
             {seedResult && (
               <div className="flex items-start gap-2 text-sm text-salon-mint-600 bg-salon-mint-50 rounded-xl px-4 py-3 mt-2">
@@ -170,15 +174,24 @@ export default function LoginScreen() {
             )}
             <div className="mt-3 space-y-1.5">
               <p className="text-xs text-salon-beige-400 text-center">テストアカウント（タップで入力）</p>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
                 <button onClick={() => fillAccount('owner@test.com')} className="text-xs text-salon-ink-700 bg-salon-beige-50 rounded-lg py-2 px-3 text-left hover:bg-salon-beige-100 transition-colors">
-                  オーナー: owner@test.com / test123456
+                  オーナー: owner@test.com
                 </button>
                 <button onClick={() => fillAccount('staff1@test.com')} className="text-xs text-salon-ink-700 bg-salon-beige-50 rounded-lg py-2 px-3 text-left hover:bg-salon-beige-100 transition-colors">
-                  スタッフ1: staff1@test.com / test123456
+                  スタッフ1: staff1@test.com
                 </button>
                 <button onClick={() => fillAccount('staff2@test.com')} className="text-xs text-salon-ink-700 bg-salon-beige-50 rounded-lg py-2 px-3 text-left hover:bg-salon-beige-100 transition-colors">
-                  スタッフ2: staff2@test.com / test123456
+                  スタッフ2: staff2@test.com
+                </button>
+                <button onClick={() => fillAccount('staff3@test.com')} className="text-xs text-salon-ink-700 bg-salon-beige-50 rounded-lg py-2 px-3 text-left hover:bg-salon-beige-100 transition-colors">
+                  スタッフ3: staff3@test.com
+                </button>
+                <button onClick={() => fillAccount('staff4@test.com')} className="text-xs text-salon-ink-700 bg-salon-beige-50 rounded-lg py-2 px-3 text-left hover:bg-salon-beige-100 transition-colors">
+                  スタッフ4: staff4@test.com
+                </button>
+                <button onClick={() => fillAccount('staff5@test.com')} className="text-xs text-salon-ink-700 bg-salon-beige-50 rounded-lg py-2 px-3 text-left hover:bg-salon-beige-100 transition-colors">
+                  スタッフ5: staff5@test.com
                 </button>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, ShiftRequest, ShiftAssignment, WEEKDAYS, getWeekStart, getWeekDates, formatDate, formatDateLabel, formatWeekLabel, TIME_SLOTS } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Calendar, Send, Check, Clock, LogOut, ChevronLeft, ChevronRight, X, Loader2, RotateCcw } from 'lucide-react';
+import { Calendar, Send, Check, Clock, LogOut, ChevronLeft, ChevronRight, X, Loader2, RotateCcw, Car } from 'lucide-react';
 
 type DayRequest = {
   is_off: boolean;
@@ -301,7 +301,7 @@ export default function StaffScreen() {
   );
 }
 
-function ConfirmedShifts({ assignments, weekDates }: { assignments: ShiftAssignment[]; weekDates: Date[] }) {
+function ConfirmedShifts({ assignments, weekDates }: { assignments: (ShiftAssignment & { parking?: string })[]; weekDates: Date[] }) {
   return (
     <div className="space-y-3">
       {weekDates.map((date, i) => {
@@ -328,6 +328,14 @@ function ConfirmedShifts({ assignments, weekDates }: { assignments: ShiftAssignm
                       <span className="text-sm text-salon-ink-800">
                         {a.start_time?.slice(0, 5)} 〜 {a.end_time?.slice(0, 5)}
                       </span>
+
+                      {/* 💡 駐車場の表示 */}
+                      {a.parking && (
+                        <span className="flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded-md border border-blue-200">
+                          <Car className="w-3.5 h-3.5" />
+                          : {a.parking}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
