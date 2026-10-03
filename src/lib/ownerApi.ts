@@ -80,25 +80,17 @@ async function callEdgeFunction(path: string, body: Record<string, unknown>) {
  * スタッフ作成（ユーザーIDをメール形式に変換して処理）
  */
 export async function createStaff(email: string, password: string, name: string) {
-  // 1. Supabase Auth にユーザー登録 (meta_dataにemailとnameを含める)
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        name,
-        email, // ★ メタデータに email を含める
-        role: 'staff',
-      },
-    },
-  });
+  // 1. Edge Function 経由で Auth ユーザーを作成
+  // (クライアントの signUp だとセッションが切り替わるため、Edge Function で Admin API 等を使用)
+  const authData = await callEdgeFunction('/create', { email, password, name });
 
-  if (authError) throw authError;
+  // authData や ユーザーID の取得チェック
+  const userId = authData?.user?.id || authData?.id;
+  if (!userId) {
+    throw new Error('ユーザーIDの取得に失敗しました');
+  }
 
-  const userId = authData.user?.id;
-  if (!userId) throw new Error('ユーザーIDの取得に失敗しました');
-
-  // 2. profiles テーブルへ直接 email を書き込み（補強）
+  // 2. profiles テーブルへ直接 email を書き込み（既存の補強処理を維持）
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
