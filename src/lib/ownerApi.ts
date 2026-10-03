@@ -2,7 +2,6 @@ import {
   supabase,
   Profile,
   ShiftRequest,
-  ShiftAssignment,
   ROOMS,
   Room,
   StaffEvaluation,
@@ -80,9 +79,40 @@ async function callEdgeFunction(path: string, body: Record<string, unknown>) {
 /**
  * スタッフ作成（ユーザーIDをメール形式に変換して処理）
  */
-export async function createStaff(username: string, password: string, name: string) {
-  const email = usernameToEmail(username);
-  return callEdgeFunction('/create', { email, password, name });
+export async function createStaff(email: string, password: string, name: string) {
+  // 1. Supabase Auth にユーザー登録 (meta_dataにemailとnameを含める)
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        name,
+        email, // ★ メタデータに email を含める
+        role: 'staff',
+      },
+    },
+  });
+
+  if (authError) throw authError;
+
+  const userId = authData.user?.id;
+  if (!userId) throw new Error('ユーザーIDの取得に失敗しました');
+
+  // 2. profiles テーブルへ直接 email を書き込み（補強）
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert({
+      id: userId,
+      name,
+      email, // ★ ここで明示的に email を保存
+      role: 'staff',
+    });
+
+  if (profileError) {
+    console.error('profiles テーブルへの更新エラー:', profileError.message);
+  }
+
+  return authData;
 }
 
 export async function updateStaffPassword(userId: string, password: string) {
